@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import os
-from scipy.spatial.transform import Rotation
 
 class Session():
     def __init__(self, datapath, date_time, animal):
@@ -53,19 +52,6 @@ class Session():
             
         self.img_data['norm_C'] = pd.concat(normalised_c)
     
-    
-    def get_euler_coords(self):
-        
-        quat = np.array([self.ho_data['qx'], self.ho_data['qy'], self.ho_data['qz'], self.ho_data['qw']])
-        R = Rotation.from_quat(quat.T)
-        euler_data = R.as_euler('xyz', degrees=True)
-        self.ho_data = pd.concat([self.ho_data, pd.DataFrame(euler_data, columns=['roll_x', 'pitch_y', 'yaw_z'])], axis=1)
-    
-    def bin_ho(self, variable, bin_size,start=-180,end=180):
-        
-        for i,v in enumerate(variable):
-            bins = int((end[i]-start[i])/bin_size[i])+1
-            self.ho_data['binned_'+v] = pd.cut(self.ho_data[v],np.linspace(start[i],end[i],bins))
     
     def _to_dF_F(self,df):
         """_summary_
