@@ -14,8 +14,20 @@ class Session():
     def load_all_data(self):
         """Load all the data"""
 
-        img_fname = self.subject+'_'+self.date_time[-8:]+'_C.csv'
-        self.img_data = pd.read_csv(os.path.join(self.dpath,'processed',self.subject,self.date_time,img_fname), index_col=0)
+        imgC_fname = self.subject+'_'+self.date_time[-8:]+'_C.csv'
+        imgC_path = os.path.join(self.dpath,'processed',self.subject,self.date_time,imgC_fname)
+        imgS_fname = self.subject+'_'+self.date_time[-8:]+'_S.csv'
+        imgS_path = os.path.join(self.dpath,'processed',self.subject,self.date_time,imgS_fname)
+        if os.path.exists(imgS_path):
+             s = pd.read_csv(imgS_path, index_col=0)
+        else:
+            s=pd.DataFrame()
+        if os.path.exists(imgC_path):
+            c = pd.read_csv(imgC_path, index_col=0)
+        else:
+            c=pd.DataFrame()
+        img_df = pd.concat([c,s.loc[:,'S']], axis=1)
+        self.img_data = img_df
         # print(img_data.isna().sum()) # check for nan values
 
         # load data from head orientation

@@ -93,6 +93,23 @@ def calculate_auc(unit_data, intervals):
     
     return all_auc
 
+def calculate_spikes(unit_data, intervals):
+    # calculate the area under the curve norm_C for each unit between intervals found and sum the area under the curve
+    
+    all_spikes = pd.DataFrame()
+
+    for key, value in intervals.items():
+        spk_dict = {}
+        for name, unit in unit_data:
+            spk=0
+            for i in value:
+                img_interval = unit[unit['frame'].between(i.left, i.right)]
+                spk += np.sum(img_interval['S'])
+            spk_dict[name] = spk
+        all_spikes[key] = pd.Series(spk_dict)
+    
+    return all_spikes
+
 def calculate_int_length(intervals):
     """Calculate the length of the intervals for a dictionary of intervals and return the total sum of the lengths for a range of angles.
 
@@ -108,7 +125,7 @@ def calculate_int_length(intervals):
         interval_lengths[itv] = total_time
     return interval_lengths
 
-def get_dir_tunning(img_data,intervals):
+def get_dir_tunning(img_data,intervals,base='spikes'):
     """_summary_
 
     :param session: _description_
@@ -118,14 +135,20 @@ def get_dir_tunning(img_data,intervals):
     :return: _description_
     :rtype: _type_
     """
-    # calculate the area under the curve norm_C for each unit between intervals found
-    print("calculating area under the curve for intervals...")
-    all_auc = calculate_auc(img_data.groupby('unit_id'), intervals)
-    print("Done!")
+    
+    if base == 'calcium':
+        # calculate the area under the curve norm_C for each unit between intervals found
+        print("calculating area under the curve for intervals...")
+        base_sum = calculate_auc(img_data.groupby('unit_id'), intervals)
+        print("Done!")
+    else:
+        print("calculating spikes per intervals...")
+        base_sum = calculate_spikes(img_data.groupby('unit_id'), intervals)
+        print("Done!")
     print("Calculating interval lengths...")
     interval_lengths = calculate_int_length(intervals)
     interval_lengths = pd.Series(interval_lengths, name='interval_lengths')
     print("Done!")
-    dir_tuning = all_auc.T.div(interval_lengths, axis=0).T # normalise it by diving by the total amount of time spent looking at that direction
+    dir_tuning = base_sum.T.div(interval_lengths, axis=0).T # normalise it by diving by the total amount of time spent looking at that direction
     dir_tuning['unit_id']=dir_tuning.index
     return dir_tuning
